@@ -1,0 +1,19 @@
+[project]
+name = "openfisca-japan-mcp"
+version = "0.1.0"
+description = "MCP Server and SDK for OpenFisca-Japan"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "OpenFisca-Core",
+    "OpenFisca-Japan",
+    "fastmcp",
+]
+
+[project.scripts]
+openfisca-japan-mcp = "openfisca_japan_mcp.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -50,7 +50,8 @@ def run_tests():
     output_list = calc(
         household_list, 
         [
-            {"name": "所得税", "household_or_member": "member"},
+            # 所得税はOpenFisca-Japan 2.1.0で未実装
+            # {"name": "所得税", "household_or_member": "member"}, 
             {"name": "児童手当", "household_or_member": "household"}
         ], 
         "2025-01-01"

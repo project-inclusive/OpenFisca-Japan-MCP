@@ -55,29 +55,45 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
     # OpenFisca-Japan の準備
     tax_benefit_system = CountryTaxBenefitSystem()
     
-    # データを解析して ndarray のリストを構築
+    # 予約済みのキー（特殊な処理が必要なもの）
+    RESERVED_PERSON_KEYS = {"name", "年齢", "年収", "person_id", "household_id", "person_role_in_household", "誕生年月日", "収入"}
+    RESERVED_HH_KEYS = {"household_id"}
+
+    # 全ての属性キーをスキャンして動的リストの受け皿を作成
+    dynamic_person_keys = set()
+    dynamic_hh_keys = set()
+    for hh in household_list:
+        hh_attr = hh.get("household_attribute", {}) or {}
+        for k in hh_attr.keys():
+            if k not in RESERVED_HH_KEYS:
+                dynamic_hh_keys.add(k)
+        
+        for m in hh.get("member_attribute", []):
+            for k in m.keys():
+                if k not in RESERVED_PERSON_KEYS:
+                    dynamic_person_keys.add(k)
+    
+    dynamic_person_data = {k: [] for k in dynamic_person_keys}
+    dynamic_hh_data = {k: [] for k in dynamic_hh_keys}
+
     person_id_list = []
     household_id_list = []
     person_role_list = []
     birth_date_list = []
     income_list = []
-    expenses_list = []
-    
     hh_id_list = []
-    hh_pref_list = []
-    hh_city_list = []
     
     target_date = datetime.strptime(date, "%Y-%m-%d")
-    
     p_id = 0
     h_id = 0
     
     for hh in household_list:
         hh_id_list.append(h_id)
         hh_attr = hh.get("household_attribute", {}) or {}
-        hh_pref_list.append(hh_attr.get("居住都道府県"))
-        hh_city_list.append(hh_attr.get("居住市区町村"))
-        
+        for k in dynamic_hh_keys:
+            val = hh_attr.get(k)
+            dynamic_hh_data[k].append(val if val is not None else "") # デフォルトは空文字
+
         members = hh.get("member_attribute", [])
         for m in members:
             if "name" not in m:
@@ -86,18 +102,21 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
             age = m.get("年齢", 0)
             birth_year = target_date.year - age
             birth_date = f"{birth_year}-{target_date.month:02d}-{target_date.day:02d}"
-            
             role = "子" if age < 18 else "親"
             
             person_id_list.append(p_id)
             household_id_list.append(h_id)
             person_role_list.append(role)
             birth_date_list.append(birth_date)
-            
             income_list.append(m.get("年収", 0))
-            
-            expenses = m.get("個人事業主の必要経費")
-            expenses_list.append(expenses if expenses is not None else 0)
+
+            for k in dynamic_person_keys:
+                val = m.get(k)
+                # デフォルト値の判定: 数値っぽければ 0、そうでなければ空文字
+                if val is None:
+                    dynamic_person_data[k].append(0) 
+                else:
+                    dynamic_person_data[k].append(val)
             
             p_id += 1
         h_id += 1
@@ -108,14 +127,22 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
         "person_role_in_household": np.array(person_role_list, dtype=str),
         "誕生年月日": np.array(birth_date_list, dtype=str),
         "収入": np.array(income_list, dtype=int),
-        "個人事業主の必要経費": np.array(expenses_list, dtype=int),
     }
+    for k, v in dynamic_person_data.items():
+        # 型推論を行って ndarray を作成
+        try:
+            data_persons_dict[k] = np.array(v)
+        except Exception:
+            data_persons_dict[k] = np.array(v, dtype=str)
 
     data_households_dict = {
         "household_id": np.array(hh_id_list, dtype=int),
-        "居住都道府県": np.array([p if p is not None else "" for p in hh_pref_list], dtype=str),
-        "居住市区町村": np.array([c if c is not None else "" for c in hh_city_list], dtype=str)
     }
+    for k, v in dynamic_hh_data.items():
+        try:
+            data_households_dict[k] = np.array(v)
+        except Exception:
+            data_households_dict[k] = np.array(v, dtype=str)
 
     sb = SimulationBuilder()
     sb.create_entities(tax_benefit_system)

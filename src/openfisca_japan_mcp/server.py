@@ -35,6 +35,8 @@ def calculate_tax_benefit(
     
     `attribute_info` で得られた属性は、その "household_or_member" の値に応じて
     household_list 内の適切な場所へ以下のように追加した上で入力してください。
+    ユーザーの入力情報は、属性のdescriptionに従って適切に変換してから入力してください。
+    特に文字列の場合は指定された選択肢以外の値は入力しないでください。
     
     - "household_or_member" が "household" の場合:
       各世帯を表す辞書内の `household_attribute` 辞書に、キー名を属性名として、値をユーザー回答として追加してください。

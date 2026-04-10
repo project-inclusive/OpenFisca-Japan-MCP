@@ -4,41 +4,26 @@ from datetime import datetime
 import numpy as np
 from openfisca_core.simulation_builder import SimulationBuilder
 from openfisca_japan import CountryTaxBenefitSystem
+from .config import ATTRIBUTE_DICT, TAX_BENEFIT_DICT
+
 
 def get_attribute_info(tax_benefit_name: str) -> List[Dict[str, Any]]:
     """
     指定された制度をcalc toolで計算するために必要なattributeのリストを返します。
     """
-    supported_benefits = ["所得税", "住民税", "社会保険料", "児童手当"]
-    if tax_benefit_name not in supported_benefits:
+    if tax_benefit_name not in TAX_BENEFIT_DICT:
         return []
     
-    return [
-        {
-            "name": "年齢",
-            "type": "int",
-            "unit": "歳",
-            "description": "世帯メンバーの年齢",
-            "household_or_member": "member",
-            "required": True
-        },
-        {
-            "name": "年収",
-            "type": "int",
-            "unit": "円",
-            "description": "世帯メンバーの年収",
-            "household_or_member": "member",
-            "required": True
-        },
-        {
-            "name": "個人事業主の必要経費",
-            "type": "int",
-            "unit": "円",
-            "description": "世帯メンバーが個人事業主である場合の必要経費。給与所得者の場合は0",
-            "household_or_member": "member",
-            "required": True
-        }
-    ]
+    attributes = []
+    for attr_entry in TAX_BENEFIT_DICT[tax_benefit_name]:
+        attr_name = attr_entry["name"]
+        if attr_name in ATTRIBUTE_DICT:
+            attr_info = ATTRIBUTE_DICT[attr_name].copy()
+            attr_info["name"] = attr_name
+            attr_info["required"] = attr_entry.get("required", False)
+            attributes.append(attr_info)
+    
+    return attributes
 
 def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dict[str, str]], date: Optional[str] = None) -> List[Dict[str, Any]]:
     """
@@ -47,7 +32,7 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
         
-    tax_benefit_list = [tb for tb in output_tax_benefit_list if tb.get("name") in ["所得税", "住民税", "社会保険料", "児童手当"]]
+    tax_benefit_list = [tb for tb in output_tax_benefit_list if tb.get("name") in TAX_BENEFIT_DICT]
     
     if not tax_benefit_list:
         return household_list

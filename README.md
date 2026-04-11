@@ -3,7 +3,7 @@
 OpenFisca-Japan-MCP は、OpenFisca-Japan を MCP (Model Context Protocol) 経由で呼び出すためのサーバーおよび Python SDK です。LLM エージェント（Claude Desktop など）から利用しやすい型とインターフェースを提供します。
 
 ## 機能
-- `get_attribute_info(tax_benefit_name)`: 入力された制度を計算するために必要な属性情報を取得します。
+- `get_tax_benefit_info(tax_benefit_name)`: 入力された制度を計算するために必要な属性情報を取得します。
 - `calc(household_list, output_tax_benefit_list, date)`: 世帯の配列データを元に、指定した制度（所得税、住民税など）の金額を計算し、元の配列拡張して返します。
 
 ## Claude Desktop からの利用 (MCP Client)

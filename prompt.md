@@ -26,9 +26,9 @@
 
 
 # Toolsの仕様
-`get_attribute_info`と`calc`の2つのtoolを実装する。
+`get_tax_benefit_info`と`calc`の2つのtoolを実装する。
 
-## get_attribute_info
+## get_tax_benefit_info
 入力された制度を`calc`toolで計算するために必要なattributeのリストを返す。
 所得税, 住民税, 社会保険料, 児童手当のみ計算可能。それ以外の制度名が入力された場合は空のリストを返す。
 
@@ -280,8 +280,8 @@ for input_key, input_value in data_persons_dict.items():
 for tax_benefit in tax_benefit_list:
     amount = simulation.calculate(tax_benefit, period)
 
-    # get_attribute_infoで得たattributeの"household_or_member"が"member"であれば、household_listのmember_attributeの全memberにkey (tax_benefit)と value (amount)を追加
-    # get_attribute_infoで得たattributeの"household_or_member"が"household"であれば、household_listの各household_attributeにkey (tax_benefit)と value (amount)を追加
+    # get_tax_benefit_infoで得たattributeの"household_or_member"が"member"であれば、household_listのmember_attributeの全memberにkey (tax_benefit)と value (amount)を追加
+    # get_tax_benefit_infoで得たattributeの"household_or_member"が"household"であれば、household_listの各household_attributeにkey (tax_benefit)と value (amount)を追加
     
 
 ```

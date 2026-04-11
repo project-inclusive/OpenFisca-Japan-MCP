@@ -7,15 +7,16 @@ from openfisca_japan import CountryTaxBenefitSystem
 from .config import ATTRIBUTE_DICT, TAX_BENEFIT_DICT
 
 
-def get_attribute_info(tax_benefit_name: str) -> List[Dict[str, Any]]:
+def get_tax_benefit_info(tax_benefit_name: str) -> Dict[str, Any]:
     """
-    指定された制度をcalc toolで計算するために必要なattributeのリストを返します。
+    指定された制度をcalc toolで計算するために必要なattributeのリストと出力単位を返します。
     """
     if tax_benefit_name not in TAX_BENEFIT_DICT:
-        return []
+        return {}
     
     attributes = []
-    for attr_entry in TAX_BENEFIT_DICT[tax_benefit_name]:
+    benefit_info = TAX_BENEFIT_DICT[tax_benefit_name]
+    for attr_entry in benefit_info.get("input_attribute", []):
         attr_name = attr_entry["name"]
         if attr_name in ATTRIBUTE_DICT:
             attr_info = ATTRIBUTE_DICT[attr_name].copy()
@@ -23,7 +24,10 @@ def get_attribute_info(tax_benefit_name: str) -> List[Dict[str, Any]]:
             attr_info["required"] = attr_entry.get("required", False)
             attributes.append(attr_info)
     
-    return attributes
+    return {
+        "input_attribute": attributes,
+        "output_level": benefit_info.get("output_level", "member")
+    }
 
 def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dict[str, str]], date: Optional[str] = None) -> List[Dict[str, Any]]:
     """
@@ -41,7 +45,7 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
     tax_benefit_system = CountryTaxBenefitSystem()
     
     # 予約済みのキー（特殊な処理が必要なもの）
-    RESERVED_PERSON_KEYS = {"name", "年齢", "年収", "person_id", "household_id", "person_role_in_household", "誕生年月日", "収入"}
+    RESERVED_PERSON_KEYS = {"name", "年収", "person_id", "household_id", "person_role_in_household"}
     RESERVED_HH_KEYS = {"household_id"}
 
     # 全ての属性キーをスキャンして動的リストの受け皿を作成
@@ -64,11 +68,9 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
     person_id_list = []
     household_id_list = []
     person_role_list = []
-    birth_date_list = []
     income_list = []
     hh_id_list = []
     
-    target_date = datetime.strptime(date, "%Y-%m-%d")
     p_id = 0
     h_id = 0
     
@@ -85,14 +87,12 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
                 m["name"] = f"member{p_id+1}"
             
             age = m.get("年齢", 0)
-            birth_year = target_date.year - age
-            birth_date = f"{birth_year}-{target_date.month:02d}-{target_date.day:02d}"
-            role = "子" if age < 18 else "親"
+            # 18歳でも"子"のroleでないと児童手当対象にならないため20歳未満を"子"とする
+            role = "子" if age < 20 else "親"  
             
             person_id_list.append(p_id)
             household_id_list.append(h_id)
             person_role_list.append(role)
-            birth_date_list.append(birth_date)
             income_list.append(m.get("年収", 0))
 
             for k in dynamic_person_keys:
@@ -110,7 +110,6 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
         "person_id": np.array(person_id_list, dtype=int),
         "household_id": np.array(household_id_list, dtype=int),
         "person_role_in_household": np.array(person_role_list, dtype=str),
-        "誕生年月日": np.array(birth_date_list, dtype=str),
         "収入": np.array(income_list, dtype=int),
     }
     for k, v in dynamic_person_data.items():
@@ -159,7 +158,8 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
 
     for tb in tax_benefit_list:
         tax_benefit = tb.get("name")
-        household_or_member = tb.get("household_or_member")
+        benefit_config = TAX_BENEFIT_DICT.get(tax_benefit, {})
+        household_or_member = benefit_config.get("output_level", "member")
         try:
             amount_array = simulation.calculate(tax_benefit, date)
             if household_or_member == "member":

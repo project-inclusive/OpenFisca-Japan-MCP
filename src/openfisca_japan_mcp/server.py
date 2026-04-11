@@ -1,28 +1,24 @@
 from typing import List, Dict, Any, Optional
 from fastmcp import FastMCP
-from .sdk import get_attribute_info, calc
+from .sdk import get_tax_benefit_info, calc
 
 mcp = FastMCP("OpenFisca-Japan-MCP")
 
 @mcp.tool()
-def attribute_info(tax_benefit_name: str) -> List[Dict[str, Any]]:
+def tax_benefit_info(tax_benefit_name: str) -> Dict[str, Any]:
     """
-    指定された制度を計算するために必要な入力属性のリストを返します。
+    指定された制度を計算するために必要な入力属性のリストと出力単位を返します。
     MCPクライアントはユーザーにこれらの属性内容を質問し、その回答を集めて `calculate_tax_benefit` ツールに渡してください。
     
     戻り値のフォーマット:
-    それぞれの要素が以下のキーを持つ辞書のリストを返します。
-    - "name": 属性の名称 (例: "年齢", "年収")
-    - "type": 属性のデータ型 (例: "int")
-    - "unit": 属性の単位 (例: "歳", "円")
-    - "description": 属性に関する説明
-    - "household_or_member": その属性が世帯単位 ("household") か個人単位 ("member") かを示します。
-    - "required": 計算にあたって必須の項目であるか (True/False)
+    以下のキーを持つ辞書を返します。
+    - "input_attribute": 以前のattribute_infoが返していた属性情報のリスト
+    - "output_level": 制度の出力単位 ("household" または "member")
 
     Args:
         tax_benefit_name: 計算したい制度名（例: 所得税, 住民税, 社会保険料, 児童手当）
     """
-    return get_attribute_info(tax_benefit_name)
+    return get_tax_benefit_info(tax_benefit_name)
 
 @mcp.tool()
 def calculate_tax_benefit(
@@ -33,16 +29,23 @@ def calculate_tax_benefit(
     """
     入力された世帯情報をもとに、指定された制度の金額計算結果を出力します。
     
-    `attribute_info` で得られた属性は、その "household_or_member" の値に応じて
+    `tax_benefit_info` で得られた"input_attribute"の各要素は、
+    その "household_or_member" の値に応じて
     household_list 内の適切な場所へ以下のように追加した上で入力してください。
-    ユーザーの入力情報は、属性のdescriptionに従って適切に変換してから入力してください。
-    特に文字列の場合は指定された選択肢以外の値は入力しないでください。
+    (得られた属性名は変更せずそのままキー名としてください。)
     
     - "household_or_member" が "household" の場合:
       各世帯を表す辞書内の `household_attribute` 辞書に、キー名を属性名として、値をユーザー回答として追加してください。
     - "household_or_member" が "member" の場合:
       各世帯を表す辞書内の `member_attribute` リストに含まれる、各個人の辞書に直接キー名を属性名として、値をユーザー回答として追加してください。
     
+    ユーザーの入力情報は、属性のdescriptionに従って適切に変換してから入力してください。
+    特に文字列の場合は指定された選択肢以外の値は入力しないでください。
+
+    `tax_benefit_info` で得られた"output_level"の値に応じて、
+    output_tax_benefit_listの各要素の"household_or_member"を設定してください。
+    ("input_attribute"の各要素の"household_or_member"とは別物です。)
+
     Args:
         household_list: 世帯情報のリスト。"name", "household_attribute", "member_attribute" を含む。
         output_tax_benefit_list: 出力したい制度のリスト。各要素は {"name": "制度名", "household_or_member": "household" または "member"}。

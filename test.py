@@ -1,12 +1,12 @@
 import json
-from src.openfisca_japan_mcp.sdk import get_attribute_info, calc
+from src.openfisca_japan_mcp.sdk import get_tax_benefit_info, calc
 
 def run_tests():
-    print("--- 1. get_attribute_info のテスト ---")
-    attrs_shotoku = get_attribute_info("所得税")
+    print("--- 1. get_tax_benefit_info のテスト ---")
+    attrs_shotoku = get_tax_benefit_info("所得税")
     print(json.dumps(attrs_shotoku, indent=2, ensure_ascii=False))
 
-    attrs_invalid = get_attribute_info("架空の税金")
+    attrs_invalid = get_tax_benefit_info("架空の税金")
     print("invalid:", attrs_invalid)
 
     print("\n--- 2. calc のテスト ---")

@@ -10,7 +10,7 @@ ATTRIBUTE_DICT: Dict[str, Dict[str, Any]] = {
     "学年": {
         "type": "int",
         "unit": "",
-        "description": "世帯メンバーの学年。ユーザー入力を小学n年生はn, 中学m年生はm+6, 高校l年生はl+9として整数に変換する。小学生未満、大学生以上は`null`とする。",
+        "description": "世帯メンバーの学年。（ユーザー入力を`calc`toolに渡すとき、小学n年生はn, 中学m年生はm+6, 高校l年生はl+9として整数に変換する。小学生未満、大学生以上は`null`とする。）",
         "household_or_member": "member",
     },
     "年収": {
@@ -73,6 +73,18 @@ ATTRIBUTE_DICT: Dict[str, Dict[str, Any]] = {
         "description": "'無', '一度', '二度', '三度', '四度'のいずれか",
         "household_or_member": "member",
     },
+    "放射線障害": {
+        "type": "str",
+        "unit": "",
+        "description": "'無', '現罹患者', '元罹患者'のいずれか",
+        "household_or_member": "member",
+    },
+    "妊産婦": {
+        "type": "str",
+        "unit": "",
+        "description": "'無', '妊娠6ヵ月未満', '妊娠6ヵ月以上', '産後6ヵ月以内'のいずれか",
+        "household_or_member": "member",
+    },
     "学生": {
         "type": "bool",
         "unit": "",
@@ -97,6 +109,36 @@ ATTRIBUTE_DICT: Dict[str, Dict[str, Any]] = {
         "description": "介護施設に入所しているか否か",
         "household_or_member": "member",
     },
+    "在宅療養中": {
+        "type": "bool",
+        "unit": "",
+        "description": "在宅で療養に専念している患者(結核又は3ヶ月以上の治療を要するもの)か否か",
+        "household_or_member": "member",
+    },
+    "入院中": {
+        "type": "bool",
+        "unit": "",
+        "description": "入院しているか否か",
+        "household_or_member": "member",
+    },
+    "六か月以内に新規就労": {
+        "type": "bool",
+        "unit": "",
+        "description": "6か月以内に新たに継続性のある職業に従事したか否か",
+        "household_or_member": "member",
+    },
+    "居住都道府県": {
+        "type": "str",
+        "unit": "",
+        "description": "居住都道府県。末尾に都道府県を付ける。例: 東京都",
+        "household_or_member": "household",
+    },
+    "居住市区町村": {
+        "type": "str",
+        "unit": "",
+        "description": "居住市区町村。末尾に市区町村を付ける。例: 千代田区",
+        "household_or_member": "household",
+    },
 }
 
 TAX_BENEFIT_DICT: Dict[str, Dict[str, Any]] = {
@@ -118,7 +160,8 @@ TAX_BENEFIT_DICT: Dict[str, Dict[str, Any]] = {
             {"name": "愛の手帳等級", "required": False},
             {"name": "学生", "required": False},
             {"name": "介護施設入所中", "required": False},
-        ]
+        ],
+        "description": "所得税の年額"
     },
     "住民税": {
         "output_level": "member",
@@ -138,7 +181,8 @@ TAX_BENEFIT_DICT: Dict[str, Dict[str, Any]] = {
             {"name": "愛の手帳等級", "required": False},
             {"name": "学生", "required": False},
             {"name": "介護施設入所中", "required": False},
-        ]
+        ],
+        "description": "住民税の年額"
     },
     "社会保険料": {
         "output_level": "member",
@@ -158,7 +202,8 @@ TAX_BENEFIT_DICT: Dict[str, Dict[str, Any]] = {
             {"name": "愛の手帳等級", "required": False},
             {"name": "学生", "required": False},
             {"name": "介護施設入所中", "required": False},
-        ]
+        ],
+        "description": "社会保険料の年額"
     },
     "児童手当": {
         "output_level": "household",
@@ -166,6 +211,26 @@ TAX_BENEFIT_DICT: Dict[str, Dict[str, Any]] = {
             {"name": "年齢", "required": True},
             {"name": "学年", "required": False},
             # 所得制限は撤廃されているため年収は不要
-        ]
+        ],
+        "description": "児童手当の月額"
+    },
+    "生活保護": {
+        "output_level": "household",
+        "input_attribute": [
+            {"name": "年齢", "required": True},
+            {"name": "年収", "required": True},
+            {"name": "居住都道府県", "required": True},
+            {"name": "居住市区町村", "required": True},
+            {"name": "学年", "required": False},
+            {"name": "身体障害者手帳等級", "required": False},
+            {"name": "放射線障害", "required": False},
+            {"name": "学生", "required": False},
+            {"name": "介護施設入所中", "required": False},
+            {"name": "入院中", "required": False},
+            {"name": "在宅療養中", "required": False},
+            {"name": "妊産婦", "required": False},
+            {"name": "六か月以内に新規就労", "required": False},
+        ],
+        "description": "生活保護の月額"
     }
 }

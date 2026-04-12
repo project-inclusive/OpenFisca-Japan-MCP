@@ -26,7 +26,8 @@ def get_tax_benefit_info(tax_benefit_name: str) -> Dict[str, Any]:
     
     return {
         "input_attribute": attributes,
-        "output_level": benefit_info.get("output_level", "member")
+        "output_level": benefit_info.get("output_level", "member"),
+        "description": benefit_info.get("description", "")
     }
 
 def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dict[str, str]], date: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -140,6 +141,9 @@ def calc(household_list: List[Dict[str, Any]], output_tax_benefit_list: List[Dic
 
     simulation = sb.build(tax_benefit_system)
 
+    # OpenFiscaの入力属性(variable)を設定
+    # OpenFisca Python APIでは入力属性として元々の定義値("誕生年月日"等)だけでなく
+    # 算出値("誕生年月日"から算出される"年齢"等)も直接設定できる
     for input_key, input_value in data_households_dict.items():
         if input_key == "household_id":
             continue

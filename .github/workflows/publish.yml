@@ -1,0 +1,55 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+          
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+        
+      - name: Run tests
+        run: uv run test.py
+
+  publish:
+    name: Build and Publish
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/openfisca-japan-mcp
+    permissions:
+      id-token: write  # Required for Trusted Publishing
+      contents: read   # Required for actions/checkout
+      
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          
+      - name: Build package
+        run: uv build
+        
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

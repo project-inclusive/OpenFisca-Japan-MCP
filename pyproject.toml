@@ -3,7 +3,7 @@ name = "openfisca-japan-mcp"
 version = "0.2.0"
 description = "MCP Server and SDK for OpenFisca-Japan"
 readme = "README.md"
-requires-python = "==3.11"
+requires-python = "~=3.11"
 
 dependencies = [
     "numpy",

@@ -10,7 +10,7 @@ ATTRIBUTE_DICT: Dict[str, Dict[str, Any]] = {
     "学年": {
         "type": "int",
         "unit": "",
-        "description": "世帯メンバーの学年。（ユーザー入力を`calc`toolに渡すとき、小学n年生はn, 中学m年生はm+6, 高校l年生はl+9として整数に変換する。小学生未満、大学生以上は`null`とする。）",
+        "description": "世帯メンバーの学年。（ユーザー入力を`calc`toolに渡すとき、小学n年生はn, 中学m年生はm+6, 高校l年生はl+9として整数に変換する。小学生未満、大学生以上は`None`とする。）",
         "household_or_member": "member",
     },
     "年収": {

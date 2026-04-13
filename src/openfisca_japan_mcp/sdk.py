@@ -9,7 +9,7 @@ from .config import ATTRIBUTE_DICT, TAX_BENEFIT_DICT
 
 def get_tax_benefit_info(tax_benefit_name: str) -> Dict[str, Any]:
     """
-    指定された制度をcalc toolで計算するために必要なattributeのリストと出力単位を返します。
+    指定された制度をcalc toolで計算するために必要なattributeのリストと出力単位、制度説明を返します。
     """
     if tax_benefit_name not in TAX_BENEFIT_DICT:
         return {}
